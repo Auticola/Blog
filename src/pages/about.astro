@@ -1,5 +1,8 @@
 ---
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
 
+const pageTitle = "1";
 ---
 
 <html lang="zh-cn">
@@ -9,16 +12,31 @@
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<title>{pageTitle}</title>
+		<style>
+			h1 {
+				color: purple;
+				font-size: 4rem;
+			}
+		</style>
 	</head>
 	<body>
-        <a href="/">首页</a>
-        <a href="/about/">关于</a>
-        <a href="/blog/">博客</a>
+		<header class="site-header">
+			<div class="site-brand"><a href="/">Zanhe</a></div>
 
-        <h1>我的 Astro 网站</h1>
-        <h2>Astro 似乎很好用</h2>
+			<nav class="site-nav">
+				<a href="/">首页</a>
+				<a href="/about">关于</a>
+				<a href="/blog">博客</a>
+				<a href="/posts">文章</a>
+			</nav>
+		</header>
 
-        <p>记录我的生活</p>
-    </body>
+		<main class="page-content">
+			<h1>{pageTitle}</h1>
+			<h2>Astro 2</h2>
+
+			<p>3</p>
+		</main>
+	</body>
 </html>
