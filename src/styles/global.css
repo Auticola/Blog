@@ -42,15 +42,21 @@ header.site-header {
   align-items: center;
   justify-content: space-between;
   width: 100vw;
-  padding: 0 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  padding: 0 1.5rem; /* 稍微增加一点左右边距 */
+  background: rgba(241, 245, 249, 0.95); /* 半透明背景 */
+  backdrop-filter: blur(8px); /* 磨砂玻璃效果 */
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* 平滑动画 */
+}
+
+/* 当下滑时，添加这个类来移出屏幕 */
+.header-hidden {
+  transform: translateY(-100%);
 }
 
 /* 页面主体：居中并限定宽度（左右留白） */
 .page-content {
-  width: 70%;
+  width: 60%;
   max-width: 980px;
   min-width: 320px;
   margin: 0 auto;

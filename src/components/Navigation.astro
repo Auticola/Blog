@@ -1,0 +1,35 @@
+---
+---
+<nav class="site-nav">
+    <!-- 固定/自动隐藏切换按钮 -->
+    <button id="nav-pin-toggle" class="nav-icon-btn" title="切换固定/自动隐藏">
+        <svg id="icon-pinned" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v2a2 2 0 0 0 1 1.73L11 16l-7 4a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 20l-7-4 7-4.27A2 2 0 0 0 21 10z"></path></svg>
+        <svg id="icon-unpinned" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"></path></svg>
+    </button>
+
+    <a href="/">首页</a>
+    <a href="/about/">关于</a>
+    <a href="/blog/">博客</a>
+    <a href="/posts/">文章</a>
+</nav>
+
+<style>
+    .nav-icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        color: rgba(15, 23, 42, 0.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+        margin-right: 0.5rem;
+    }
+    .nav-icon-btn:hover {
+        color: #000;
+    }
+    .hidden {
+        display: none;
+    }
+</style>

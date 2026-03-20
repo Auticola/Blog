@@ -1,0 +1,61 @@
+---
+import Navigation from './Navigation.astro';
+---
+<header class="site-header">
+    <div class="site-brand"><a href="/">Acola</a></div>
+    <Navigation />
+</header>
+
+<script>
+    const header = document.querySelector('.site-header');
+    const toggleBtn = document.getElementById('nav-pin-toggle');
+    const iconPinned = document.getElementById('icon-pinned');
+    const iconUnpinned = document.getElementById('icon-unpinned');
+
+    let lastScrollY = window.scrollY;
+    // 从本地存储读取状态，默认为 true (固定模式)
+    let isPinned = localStorage.getItem('nav-pinned') !== 'false';
+
+    // 初始化按钮图标
+    updateIcons();
+
+    toggleBtn?.addEventListener('click', () => {
+        isPinned = !isPinned;
+        localStorage.setItem('nav-pinned', String(isPinned));
+        updateIcons();
+        
+        // 如果切回固定，立刻显示 header
+        if (isPinned) {
+            header?.classList.remove('header-hidden');
+        }
+    });
+
+    function updateIcons() {
+        if (isPinned) {
+            iconPinned?.classList.remove('hidden');
+            iconUnpinned?.classList.add('hidden');
+        } else {
+            iconPinned?.classList.add('hidden');
+            iconUnpinned?.classList.remove('hidden');
+        }
+    }
+
+    // 核心滚动逻辑
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+
+        // 如果开启了固定模式，不执行任何操作
+        if (isPinned) return;
+
+        // 向上滑或者在顶部，显示 header
+        if (currentScrollY < lastScrollY || currentScrollY < 10) {
+            header?.classList.remove('header-hidden');
+        } 
+        // 向下滑且超过一定距离，隐藏 header
+        else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+            header?.classList.add('header-hidden');
+        }
+
+        lastScrollY = currentScrollY;
+    }, { passive: true });
+</script>

@@ -1,8 +1,9 @@
 ---
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
 
-const pageTitle = "1";
+const pageTitle = "关于我";
 ---
 
 <html lang="zh-cn">
@@ -12,7 +13,7 @@ const pageTitle = "1";
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>{pageTitle}</title>
+		<title>{pageTitle} | Acola's Blog</title>
 		<style>
 			h1 {
 				color: purple;
@@ -21,22 +22,14 @@ const pageTitle = "1";
 		</style>
 	</head>
 	<body>
-		<header class="site-header">
-			<div class="site-brand"><a href="/">Acola</a></div>
-
-			<nav class="site-nav">
-				<a href="/">首页</a>
-				<a href="/about">关于</a>
-				<a href="/blog">博客</a>
-				<a href="/posts">文章</a>
-			</nav>
-		</header>
+		<Header />
 
 		<main class="page-content">
 			<h1>{pageTitle}</h1>
-			<h2>Astro 2</h2>
+			<h2>关于 Acola 的 Astro 站点</h2>
 
-			<p>3</p>
+			<p>我正在学习 Astro，这是我的个人博客！</p>
 		</main>
+		<Footer />
 	</body>
 </html>
