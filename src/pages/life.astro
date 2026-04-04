@@ -1,0 +1,296 @@
+---
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+const lifeFiles = import.meta.glob('./life/*.md', { query: '?raw', eager: true });
+const rawFiles = Object.entries(lifeFiles);
+
+interface LifePost {
+  pubDate: string;
+  imagePosition: string;
+  tags: string;
+  text: string;
+  images: string[];
+}
+
+function parseLifePost(raw: string): LifePost | null {
+  const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return null;
+
+  const frontmatterStr = match[1];
+  const body = match[2].trim();
+
+  const fm: Record<string, string> = {};
+  frontmatterStr.split('\n').forEach(line => {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx > 0) {
+      const key = line.slice(0, colonIdx).trim();
+      let value = line.slice(colonIdx + 1).trim();
+      value = value.replace(/^['"]|['"]$/g, '');
+      if (value.startsWith('[') && value.endsWith(']')) {
+        value = value.slice(1, -1).split(',').map(s => s.trim().replace(/['"]/g, '')).join(', ');
+      }
+      fm[key] = value;
+    }
+  });
+
+  const lines = body.split('\n').filter(l => l.trim());
+  const textParts: string[] = [];
+  const images: string[] = [];
+
+  lines.forEach(line => {
+    const imgMatch = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+    if (imgMatch) {
+      images.push(`/life/${imgMatch[2]}`);
+    } else {
+      textParts.push(line);
+    }
+  });
+
+  return {
+    pubDate: fm.pubDate || '',
+    imagePosition: fm.imagePosition || 'right',
+    tags: fm.tags || '',
+    text: textParts.join('<br>'),
+    images,
+  };
+}
+
+const lifePosts: LifePost[] = rawFiles
+  .map(([path, mod]: [string, any]) => {
+    const raw = mod.default || mod;
+    return parseLifePost(typeof raw === 'string' ? raw : '');
+  })
+  .filter(Boolean) as LifePost[];
+
+lifePosts.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+---
+
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>生活 - Acola</title>
+  </head>
+  <body>
+    <Header />
+
+    <main class="page-content">
+      <h1>🌿 生活</h1>
+
+      <div class="life-feed">
+        {lifePosts.map((post: LifePost) => (
+          <div
+            class="life-card"
+            data-text={post.text}
+            data-date={post.pubDate}
+            data-images={JSON.stringify(post.images)}
+            data-tags={post.tags}
+            data-position={post.imagePosition}
+            onclick="openLifeModal(this)"
+          >
+            <div class={`life-inner ${post.imagePosition === 'left' ? 'img-left' : 'img-right'}`}>
+              <div class="life-text">
+                <span class="life-date">{post.pubDate}</span>
+                <p set:html={post.text}></p>
+                {post.tags && <span class="life-card-tags">{post.tags}</span>}
+              </div>
+              {post.images.length > 0 && (
+                <div class="life-image-preview">
+                  <img src={post.images[0]} alt="" loading="lazy" />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {lifePosts.length === 0 && (
+          <p class="empty-hint">还没有生活动态～</p>
+        )}
+      </div>
+    </main>
+    <Footer />
+
+    <!-- 模态框 -->
+    <div id="lifeModal" class="modal">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeLifeModal()">✕</button>
+        <div class="modal-header">
+          <span class="modal-date" id="modalDate"></span>
+          <span class="modal-tags" id="modalTags"></span>
+        </div>
+        <div class="modal-text" id="modalText"></div>
+        <div class="modal-images" id="modalImages"></div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<style>
+  h1 {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  .life-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .life-card {
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .life-card:hover {
+    transform: scale(1.01);
+  }
+  .life-inner {
+    display: flex;
+    gap: 1rem;
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    align-items: flex-start;
+  }
+  .life-inner.img-right {
+    flex-direction: row;
+  }
+  .life-inner.img-left {
+    flex-direction: row-reverse;
+  }
+  .life-text {
+    flex: 1;
+  }
+  .life-date {
+    font-size: 0.85rem;
+    color: #999;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .life-text p {
+    margin: 0;
+    line-height: 1.7;
+    color: #333;
+  }
+  .life-card-tags {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: #666;
+  }
+  .life-image-preview img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .empty-hint {
+    text-align: center;
+    color: #999;
+    padding: 3rem 0;
+  }
+  /* 模态框 */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+  }
+  .modal.active {
+    display: flex;
+  }
+  .modal-content {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s;
+  }
+  .modal-close:hover {
+    color: #333;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .modal-date {
+    font-size: 0.85rem;
+    color: #999;
+  }
+  .modal-tags {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+  }
+  .modal-text {
+    color: #333;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    white-space: pre-wrap;
+  }
+  .modal-images {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .modal-images img {
+    width: 100%;
+    border-radius: 8px;
+  }
+</style>
+
+<script is:inline>
+  function openLifeModal(el) {
+    const modal = document.getElementById('lifeModal');
+    const text = el.getAttribute('data-text');
+    const date = el.getAttribute('data-date');
+    const images = JSON.parse(el.getAttribute('data-images') || '[]');
+    const tags = el.getAttribute('data-tags');
+
+    document.getElementById('modalDate').textContent = date;
+    document.getElementById('modalText').innerHTML = text.replace(/<br>/g, '\n');
+    document.getElementById('modalTags').textContent = tags || '';
+
+    const imagesContainer = document.getElementById('modalImages');
+    imagesContainer.innerHTML = images.map(src => `<img src="${src}" alt="" />`).join('');
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLifeModal() {
+    document.getElementById('lifeModal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('lifeModal').addEventListener('click', function(e) {
+    if (e.target === this) closeLifeModal();
+  });
+</script>

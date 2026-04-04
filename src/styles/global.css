@@ -174,3 +174,10 @@ nav.site-nav a:focus-visible {
     padding: 0 1rem;
   }
 }
+
+/* 6) 文章正文：保留段落内的原始换行 */
+.post-content p {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}

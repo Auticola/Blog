@@ -1,0 +1,171 @@
+---
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+const posts = import.meta.glob('./posts/*.md', { eager: true });
+const allPosts = Object.values(posts).map((p: any) => ({
+  ...p,
+  ...p.frontmatter,
+}));
+
+// 收集所有标签并统计
+const tagMap: Record<string, number> = {};
+allPosts.forEach((post: any) => {
+  if (post.tags) {
+    post.tags.forEach((tag: string) => {
+      tagMap[tag] = (tagMap[tag] || 0) + 1;
+    });
+  }
+});
+
+// 按标签名排序
+const sortedTags = Object.keys(tagMap).sort();
+
+// URL 参数筛选
+const url = new URL(Astro.request.url);
+const selectedTag = url.searchParams.get('tag');
+
+// 筛选文章
+const filteredPosts = selectedTag
+  ? allPosts.filter((p: any) => p.tags?.includes(selectedTag))
+  : [];
+---
+
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>标签 - Acola</title>
+	</head>
+	<body>
+		<Header />
+
+		<main class="page-content">
+			<h1>🏷️ 标签</h1>
+			<p class="tag-desc">点击标签查看相关文章。</p>
+
+			<!-- 标签云 -->
+			<div class="tag-cloud">
+				{sortedTags.map((tag) => (
+					<a
+						href={`/tags/?tag=${tag}`}
+						class={`tag-item ${selectedTag === tag ? 'active' : ''}`}
+					>
+						{tag} <span class="tag-count">{tagMap[tag]}</span>
+					</a>
+				))}
+			</div>
+
+			<!-- 筛选结果 -->
+			{selectedTag && (
+				<div class="tag-result">
+					<h2>
+						{selectedTag}
+						<a href="/tags/" class="clear-filter">✕ 清除</a>
+					</h2>
+					{filteredPosts.length > 0 ? (
+						<ul class="tag-list">
+							{filteredPosts.map((post: any) => (
+								<li>
+									<a href={post.url}>{post.title}</a>
+									<span class="tag-list-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="empty-hint">该标签下还没有文章。</p>
+					)}
+				</div>
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+	}
+	.tag-desc {
+		color: #666;
+		margin-bottom: 1.5rem;
+	}
+	.tag-cloud {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-bottom: 2rem;
+	}
+	.tag-item {
+		display: inline-block;
+		padding: 0.3rem 0.8rem;
+		border-radius: 999px;
+		text-decoration: none;
+		background: #fef3c7;
+		color: #92400e;
+		font-size: 0.85rem;
+		transition: all 0.2s;
+	}
+	.tag-item:hover {
+		background: #fde68a;
+	}
+	.tag-item.active {
+		background: #d97706;
+		color: #fff;
+	}
+	.tag-count {
+		font-size: 0.75rem;
+		margin-left: 0.2rem;
+		opacity: 0.8;
+	}
+	.tag-result {
+		margin-top: 1rem;
+	}
+	.tag-result h2 {
+		font-size: 1.3rem;
+		color: #333;
+		border-bottom: 2px solid #e5e7eb;
+		padding-bottom: 0.5rem;
+		margin-bottom: 1rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.clear-filter {
+		font-size: 0.85rem;
+		color: #666;
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+	.clear-filter:hover {
+		color: #ef4444;
+	}
+	.tag-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.tag-list li {
+		padding: 0.4rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	.tag-list a {
+		color: #000;
+		text-decoration: none;
+	}
+	.tag-list a:hover {
+		text-decoration: underline;
+	}
+	.tag-list-date {
+		font-size: 0.85rem;
+		color: #999;
+	}
+	.empty-hint {
+		color: #999;
+		text-align: center;
+		padding: 2rem 0;
+	}
+</style>

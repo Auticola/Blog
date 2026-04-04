@@ -1,0 +1,175 @@
+---
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+const posts = import.meta.glob('./posts/*.md', { eager: true });
+const allPosts = Object.values(posts).map((p: any) => ({
+  ...p,
+  ...p.frontmatter,
+}));
+
+// 预设分类
+const categories = ['课业', 'CS'];
+
+// 按分类分组
+const grouped: Record<string, any[]> = {};
+allPosts.forEach((post: any) => {
+  const cat = post.category || '未分类';
+  if (!grouped[cat]) grouped[cat] = [];
+  grouped[cat].push(post);
+});
+
+// URL 参数筛选
+const url = new URL(Astro.request.url);
+const selectedCat = url.searchParams.get('cat');
+---
+
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>分类 - Acola</title>
+	</head>
+	<body>
+		<Header />
+
+		<main class="page-content">
+			<h1>📂 分类</h1>
+			<p class="cat-desc">点击分类查看相关文章。</p>
+
+			<!-- 分类导航标签 -->
+			<div class="cat-tabs">
+				<a href="/categories/" class={`cat-tab ${!selectedCat ? 'active' : ''}`}>全部</a>
+				{categories.map((cat) => {
+					const count = grouped[cat]?.length || 0;
+					return (
+						<a href={`/categories/?cat=${cat}`} class={`cat-tab ${selectedCat === cat ? 'active' : ''}`}>
+							{cat} <span class="cat-count">{count}</span>
+						</a>
+					);
+				})}
+			</div>
+
+			<!-- 文章列表 -->
+			{selectedCat ? (
+				grouped[selectedCat]?.length > 0 ? (
+					<div class="cat-section">
+						<h2>{selectedCat}</h2>
+						<ul class="cat-list">
+							{grouped[selectedCat].map((post: any) => (
+								<li>
+									<a href={post.url}>{post.title}</a>
+									<span class="cat-list-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+				) : (
+					<p class="empty-hint">该分类下还没有文章。</p>
+				)
+			) : (
+				categories.map((cat) => (
+					grouped[cat]?.length > 0 && (
+						<div class="cat-section">
+							<h2>
+								<a href={`/categories/?cat=${cat}`}>{cat}</a>
+							</h2>
+							<ul class="cat-list">
+								{grouped[cat].map((post: any) => (
+									<li>
+										<a href={post.url}>{post.title}</a>
+										<span class="cat-list-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					)
+				))
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+	}
+	.cat-desc {
+		color: #666;
+		margin-bottom: 1.5rem;
+	}
+	.cat-tabs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-bottom: 2rem;
+	}
+	.cat-tab {
+		display: inline-block;
+		padding: 0.3rem 0.8rem;
+		border-radius: 999px;
+		text-decoration: none;
+		background: #e0e7ff;
+		color: #3730a3;
+		font-size: 0.85rem;
+		transition: all 0.2s;
+	}
+	.cat-tab:hover {
+		background: #c7d2fe;
+	}
+	.cat-tab.active {
+		background: #4f46e5;
+		color: #fff;
+	}
+	.cat-count {
+		font-size: 0.75rem;
+		margin-left: 0.25rem;
+		opacity: 0.8;
+	}
+	.cat-section {
+		margin-bottom: 2rem;
+	}
+	.cat-section h2 {
+		font-size: 1.3rem;
+		color: #333;
+		border-bottom: 2px solid #e5e7eb;
+		padding-bottom: 0.5rem;
+		margin-bottom: 1rem;
+	}
+	.cat-section h2 a {
+		color: inherit;
+		text-decoration: none;
+	}
+	.cat-section h2 a:hover {
+		color: #2563eb;
+	}
+	.cat-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.cat-list li {
+		padding: 0.4rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	.cat-list a {
+		color: #000;
+		text-decoration: none;
+	}
+	.cat-list a:hover {
+		text-decoration: underline;
+	}
+	.cat-list-date {
+		font-size: 0.85rem;
+		color: #999;
+	}
+	.empty-hint {
+		color: #999;
+		text-align: center;
+		padding: 2rem 0;
+	}
+</style>

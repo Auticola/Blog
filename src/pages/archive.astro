@@ -1,0 +1,121 @@
+---
+import '../styles/global.css';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+const posts = import.meta.glob('./posts/*.md', { eager: true });
+const allPosts = Object.values(posts).map((p: any) => ({
+  ...p,
+  ...p.frontmatter,
+})).sort((a: any, b: any) => {
+  return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+});
+
+// 按年月分组
+const grouped: Record<string, any[]> = {};
+allPosts.forEach((post: any) => {
+  const date = new Date(post.pubDate);
+  const key = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`;
+  if (!grouped[key]) grouped[key] = [];
+  grouped[key].push(post);
+});
+
+// 按时间倒序排列分组
+const sortedKeys = Object.keys(grouped).sort((a, b) => {
+  const yearA = parseInt(a.match(/(\d+)年/)[1]);
+  const monthA = parseInt(a.match(/(\d+)月/)[1]);
+  const yearB = parseInt(b.match(/(\d+)年/)[1]);
+  const monthB = parseInt(b.match(/(\d+)月/)[1]);
+  return yearB - yearA || monthB - monthA;
+});
+---
+
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>归档 - Acola</title>
+	</head>
+	<body>
+		<Header />
+
+		<main class="page-content">
+			<h1>📚 归档</h1>
+			<p class="archive-desc">所有文章按时间排列，共 {allPosts.length} 篇。</p>
+
+			{sortedKeys.map((key) => (
+				<div class="archive-group">
+					<h2 class="archive-year">{key}</h2>
+					<ul class="archive-list">
+						{grouped[key].map((post: any) => (
+							<li>
+								<span class="archive-date">{new Date(post.pubDate).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })}</span>
+								{post.tags && post.tags.length > 0 && (
+									<span class="archive-tag-tag">【{post.tags[0]}】</span>
+								)}
+								<a href={post.url}>{post.title}</a>
+								{post.category && <span class="archive-cat">{post.category}</span>}
+							</li>
+						))}
+					</ul>
+				</div>
+			))}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+	}
+	.archive-desc {
+		color: #666;
+		margin-bottom: 2rem;
+	}
+	.archive-group {
+		margin-bottom: 2rem;
+	}
+	.archive-year {
+		font-size: 1.3rem;
+		font-weight: 700;
+		color: #333;
+		border-bottom: 2px solid #e5e7eb;
+		padding-bottom: 0.5rem;
+		margin-bottom: 1rem;
+	}
+	.archive-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.archive-list li {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+		padding: 0.4rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	.archive-date {
+		font-size: 0.85rem;
+		color: #999;
+		min-width: 3.5rem;
+	}
+	.archive-list a {
+		color: #000;
+		text-decoration: none;
+		flex: 1;
+	}
+	.archive-list a:hover {
+		text-decoration: underline;
+	}
+	.archive-cat {
+		font-size: 0.75rem;
+		background: #e0e7ff;
+		color: #3730a3;
+		padding: 0.1rem 0.5rem;
+		border-radius: 999px;
+	}
+</style>
