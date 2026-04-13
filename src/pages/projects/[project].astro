@@ -6,11 +6,11 @@ import Header from '../../components/Header.astro';
 
 // 获取项目文章
 const posts = await getCollection('posts');
-const projectPosts = posts.filter(post => post.id.startsWith('projects/'));
+const allProjectPosts = posts.filter(post => post.id.startsWith('projects/'));
 
 // 按项目分组
 const projects: Record<string, any[]> = {};
-projectPosts.forEach(post => {
+allProjectPosts.forEach(post => {
   const parts = post.id.split('/');
   if (parts.length >= 2) {
     const projectName = parts[1];
