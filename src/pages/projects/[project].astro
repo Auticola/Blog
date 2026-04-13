@@ -1,0 +1,214 @@
+---
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+
+// 获取项目文章
+const posts = await getCollection('posts');
+const projectPosts = posts.filter(post => post.id.startsWith('projects/'));
+
+// 按项目分组
+const projects: Record<string, any[]> = {};
+projectPosts.forEach(post => {
+  const parts = post.id.split('/');
+  if (parts.length >= 2) {
+    const projectName = parts[1];
+    if (!projects[projectName]) {
+      projects[projectName] = [];
+    }
+    projects[projectName].push({
+      ...post.data,
+      url: `/posts/${post.id}/`,
+      id: post.id,
+    });
+  }
+});
+
+// 项目名称映射
+const projectNames: Record<string, string> = {
+  '3DGS': '3D Gaussian Splatting',
+};
+
+const projectKey = Astro.params.project as string;
+const projectDisplayName = projectNames[projectKey] || projectKey;
+const projectPosts = projects[projectKey] || [];
+
+// 排序文章
+projectPosts.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'));
+---
+
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{projectDisplayName} - Acola</title>
+	</head>
+	<body>
+		<Header />
+
+		<div class="project-layout">
+			<!-- 左侧文章快捷链接 -->
+			<aside class="project-sidebar">
+				<h3 class="sidebar-title">文章索引</h3>
+				<nav class="sidebar-nav">
+					<ul>
+						{projectPosts.map((post) => (
+							<li>
+								<a href={post.url}>{post.title}</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			</aside>
+
+			<!-- 右侧主要内容 -->
+			<main class="project-content">
+				<h1>{projectDisplayName}</h1>
+				<p class="project-intro">这里是 {projectDisplayName} 的项目介绍和资料索引。</p>
+				
+				<div class="project-posts">
+					<h2>文章列表</h2>
+					{projectPosts.length > 0 ? (
+						<ul class="posts-list">
+							{projectPosts.map((post) => (
+								<li>
+									<a href={post.url}>{post.title}</a>
+									<span class="post-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="empty-hint">这个项目还没有文章。</p>
+					)}
+				</div>
+			</main>
+		</div>
+		
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.project-layout {
+		display: flex;
+		gap: 2rem;
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 2rem 5%;
+	}
+	
+	/* 左侧边栏 */
+	.project-sidebar {
+		position: sticky;
+		top: 5rem;
+		width: 280px;
+		flex-shrink: 0;
+		background: #fff;
+		border-radius: 12px;
+		padding: 1.5rem;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+		height: fit-content;
+		max-height: calc(100vh - 6rem);
+		overflow-y: auto;
+	}
+	
+	.sidebar-title {
+		font-size: 1.1rem;
+		margin: 0 0 1rem 0;
+		padding-bottom: 0.75rem;
+		border-bottom: 2px solid #e5e7eb;
+	}
+	
+	.sidebar-nav ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	
+	.sidebar-nav li {
+		margin-bottom: 0.5rem;
+	}
+	
+	.sidebar-nav a {
+		display: block;
+		padding: 0.5rem 0.75rem;
+		color: #333;
+		text-decoration: none;
+		border-radius: 6px;
+		transition: all 0.2s;
+		font-size: 0.9rem;
+	}
+	
+	.sidebar-nav a:hover {
+		background: #f1f5f9;
+		color: #2563eb;
+	}
+	
+	/* 右侧内容区 */
+	.project-content {
+		flex: 1;
+		min-width: 0;
+	}
+	
+	.project-content h1 {
+		text-align: left;
+		margin-bottom: 1rem;
+	}
+	
+	.project-intro {
+		color: #666;
+		line-height: 1.8;
+		margin-bottom: 2rem;
+		padding: 1rem;
+		background: #f8fafc;
+		border-radius: 8px;
+		border-left: 4px solid #2563eb;
+	}
+	
+	.posts-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	
+	.posts-list li {
+		padding: 0.6rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	
+	.posts-list a {
+		color: #000;
+		text-decoration: none;
+	}
+	
+	.posts-list a:hover {
+		text-decoration: underline;
+		color: #2563eb;
+	}
+	
+	.post-date {
+		font-size: 0.85rem;
+		color: #999;
+	}
+	
+	.empty-hint {
+		color: #999;
+		text-align: center;
+		padding: 2rem 0;
+	}
+	
+	@media (max-width: 1024px) {
+		.project-layout {
+			flex-direction: column;
+		}
+		
+		.project-sidebar {
+			position: static;
+			width: 100%;
+			max-height: none;
+		}
+	}
+</style>

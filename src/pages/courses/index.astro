@@ -1,0 +1,143 @@
+---
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+
+// 获取所有课业文章
+const posts = await getCollection('posts');
+const inClassPosts = posts.filter(post => post.id.startsWith('in-class/'));
+
+// 按课程分组
+const courses: Record<string, any[]> = {};
+inClassPosts.forEach(post => {
+  // 从路径中提取课程名，如 "in-class/database/Lec1" -> "database"
+  const parts = post.id.split('/');
+  if (parts.length >= 2) {
+    const courseName = parts[1];
+    if (!courses[courseName]) {
+      courses[courseName] = [];
+    }
+    courses[courseName].push({
+      ...post.data,
+      url: `/posts/${post.id}/`,
+      id: post.id,
+    });
+  }
+});
+
+// 课程名称映射
+const courseNames: Record<string, string> = {
+  'database': '数据库系统',
+  'sys3': '计算机系统3',
+};
+---
+
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>课业 - Acola</title>
+	</head>
+	<body>
+		<Header />
+
+		<main class="page-content">
+			<h1>课业</h1>
+			<p class="page-desc">我的课程学习笔记与资料。</p>
+
+			<div class="courses-grid">
+				{Object.keys(courses).map((courseKey) => {
+					const courseDisplayName = courseNames[courseKey] || courseKey;
+					const coursePosts = courses[courseKey];
+					return (
+						<div class="course-card">
+							<h2 class="course-title">
+								<a href={`/courses/${courseKey}/`}>{courseDisplayName}</a>
+							</h2>
+							<p class="course-count">{coursePosts.length} 篇文章</p>
+							<ul class="course-list">
+								{coursePosts.map((post) => (
+									<li>
+										<a href={post.url}>{post.title}</a>
+										<span class="course-list-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					);
+				})}
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+	}
+	.page-desc {
+		color: #666;
+		margin-bottom: 2rem;
+		text-align: center;
+	}
+	.courses-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+		gap: 2rem;
+	}
+	.course-card {
+		background: #fff;
+		border-radius: 12px;
+		padding: 1.5rem;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+	}
+	.course-title {
+		font-size: 1.5rem;
+		margin: 0 0 0.5rem 0;
+	}
+	.course-title a {
+		color: #333;
+		text-decoration: none;
+	}
+	.course-title a:hover {
+		color: #2563eb;
+	}
+	.course-count {
+		color: #999;
+		font-size: 0.85rem;
+		margin-bottom: 1rem;
+	}
+	.course-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.course-list li {
+		padding: 0.4rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	.course-list li:last-child {
+		border-bottom: none;
+	}
+	.course-list a {
+		color: #000;
+		text-decoration: none;
+	}
+	.course-list a:hover {
+		text-decoration: underline;
+	}
+	.course-list-date {
+		font-size: 0.85rem;
+		color: #999;
+	}
+	
+	@media (max-width: 720px) {
+		.courses-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

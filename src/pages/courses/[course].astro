@@ -1,0 +1,215 @@
+---
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+
+// 获取课业文章
+const posts = await getCollection('posts');
+const inClassPosts = posts.filter(post => post.id.startsWith('in-class/'));
+
+// 按课程分组
+const courses: Record<string, any[]> = {};
+inClassPosts.forEach(post => {
+  const parts = post.id.split('/');
+  if (parts.length >= 2) {
+    const courseName = parts[1];
+    if (!courses[courseName]) {
+      courses[courseName] = [];
+    }
+    courses[courseName].push({
+      ...post.data,
+      url: `/posts/${post.id}/`,
+      id: post.id,
+    });
+  }
+});
+
+// 课程名称映射
+const courseNames: Record<string, string> = {
+  'database': '数据库系统',
+  'sys3': '计算机系统3',
+};
+
+const courseKey = Astro.params.course as string;
+const courseDisplayName = courseNames[courseKey] || courseKey;
+const coursePosts = courses[courseKey] || [];
+
+// 排序文章（按章节或标题）
+coursePosts.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'));
+---
+
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{courseDisplayName} - Acola</title>
+	</head>
+	<body>
+		<Header />
+
+		<div class="course-layout">
+			<!-- 左侧文章快捷链接 -->
+			<aside class="course-sidebar">
+				<h3 class="sidebar-title">文章索引</h3>
+				<nav class="sidebar-nav">
+					<ul>
+						{coursePosts.map((post) => (
+							<li>
+								<a href={post.url}>{post.title}</a>
+							</li>
+						))}
+					</ul>
+				</nav>
+			</aside>
+
+			<!-- 右侧主要内容 -->
+			<main class="course-content">
+				<h1>{courseDisplayName}</h1>
+				<p class="course-intro">这里是 {courseDisplayName} 的课程介绍和资料索引。</p>
+				
+				<div class="course-posts">
+					<h2>文章列表</h2>
+					{coursePosts.length > 0 ? (
+						<ul class="posts-list">
+							{coursePosts.map((post) => (
+								<li>
+									<a href={post.url}>{post.title}</a>
+									<span class="post-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p class="empty-hint">这门课还没有文章。</p>
+					)}
+				</div>
+			</main>
+		</div>
+		
+		<Footer />
+	</body>
+</html>
+
+<style>
+	.course-layout {
+		display: flex;
+		gap: 2rem;
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 2rem 5%;
+	}
+	
+	/* 左侧边栏 */
+	.course-sidebar {
+		position: sticky;
+		top: 5rem;
+		width: 280px;
+		flex-shrink: 0;
+		background: #fff;
+		border-radius: 12px;
+		padding: 1.5rem;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+		height: fit-content;
+		max-height: calc(100vh - 6rem);
+		overflow-y: auto;
+	}
+	
+	.sidebar-title {
+		font-size: 1.1rem;
+		margin: 0 0 1rem 0;
+		padding-bottom: 0.75rem;
+		border-bottom: 2px solid #e5e7eb;
+	}
+	
+	.sidebar-nav ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	
+	.sidebar-nav li {
+		margin-bottom: 0.5rem;
+	}
+	
+	.sidebar-nav a {
+		display: block;
+		padding: 0.5rem 0.75rem;
+		color: #333;
+		text-decoration: none;
+		border-radius: 6px;
+		transition: all 0.2s;
+		font-size: 0.9rem;
+	}
+	
+	.sidebar-nav a:hover {
+		background: #f1f5f9;
+		color: #2563eb;
+	}
+	
+	/* 右侧内容区 */
+	.course-content {
+		flex: 1;
+		min-width: 0;
+	}
+	
+	.course-content h1 {
+		text-align: left;
+		margin-bottom: 1rem;
+	}
+	
+	.course-intro {
+		color: #666;
+		line-height: 1.8;
+		margin-bottom: 2rem;
+		padding: 1rem;
+		background: #f8fafc;
+		border-radius: 8px;
+		border-left: 4px solid #2563eb;
+	}
+	
+	.posts-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	
+	.posts-list li {
+		padding: 0.6rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	
+	.posts-list a {
+		color: #000;
+		text-decoration: none;
+	}
+	
+	.posts-list a:hover {
+		text-decoration: underline;
+		color: #2563eb;
+	}
+	
+	.post-date {
+		font-size: 0.85rem;
+		color: #999;
+	}
+	
+	.empty-hint {
+		color: #999;
+		text-align: center;
+		padding: 2rem 0;
+	}
+	
+	@media (max-width: 1024px) {
+		.course-layout {
+			flex-direction: column;
+		}
+		
+		.course-sidebar {
+			position: static;
+			width: 100%;
+			max-height: none;
+		}
+	}
+</style>

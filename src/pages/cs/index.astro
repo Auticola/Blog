@@ -1,0 +1,178 @@
+---
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+
+// 获取所有 Computer Science 文章
+const posts = await getCollection('posts');
+const csPosts = posts.filter(post => post.data.category === 'Computer Science');
+
+// 按主题分组（从路径中提取）
+const topics: Record<string, any[]> = {};
+csPosts.forEach(post => {
+  const parts = post.id.split('/');
+  if (parts.length >= 2) {
+    const topic = parts[0];
+    if (!topics[topic]) {
+      topics[topic] = [];
+    }
+    topics[topic].push({
+      ...post.data,
+      url: `/posts/${post.id}/`,
+      id: post.id,
+    });
+  }
+});
+
+// 如果没有主题结构，直接显示所有文章
+const hasTopics = Object.keys(topics).length > 0;
+---
+
+<html lang="zh-cn">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Computer Science - Acola</title>
+	</head>
+	<body>
+		<Header />
+
+		<main class="page-content">
+			<h1>Computer Science</h1>
+			<p class="page-desc">计算机科学与技术的學習笔记与资料。</p>
+
+			{hasTopics ? (
+				<div class="cs-grid">
+					{Object.keys(topics).map((topicKey) => {
+						const topicPosts = topics[topicKey];
+						return (
+							<div class="cs-card">
+								<h2 class="cs-title">
+									<a href={`/cs/${topicKey}/`}>{topicKey}</a>
+								</h2>
+								<p class="cs-count">{topicPosts.length} 篇文章</p>
+								<ul class="cs-list">
+									{topicPosts.map((post) => (
+										<li>
+											<a href={post.url}>{post.title}</a>
+											<span class="cs-list-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						);
+					})}
+				</div>
+			) : (
+				csPosts.length > 0 ? (
+					<ul class="cs-flat-list">
+						{csPosts.map((post) => (
+							<li>
+								<a href={post.url}>{post.title}</a>
+								<span class="cs-flat-date"> - {new Date(post.pubDate).toLocaleDateString('zh-CN')}</span>
+							</li>
+						))}
+					</ul>
+				) : (
+					<p class="empty-hint">还没有文章。</p>
+				)
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	h1 {
+		margin-bottom: 0.5rem;
+	}
+	.page-desc {
+		color: #666;
+		margin-bottom: 2rem;
+		text-align: center;
+	}
+	.cs-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+		gap: 2rem;
+	}
+	.cs-card {
+		background: #fff;
+		border-radius: 12px;
+		padding: 1.5rem;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+	}
+	.cs-title {
+		font-size: 1.5rem;
+		margin: 0 0 0.5rem 0;
+	}
+	.cs-title a {
+		color: #333;
+		text-decoration: none;
+	}
+	.cs-title a:hover {
+		color: #2563eb;
+	}
+	.cs-count {
+		color: #999;
+		font-size: 0.85rem;
+		margin-bottom: 1rem;
+	}
+	.cs-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.cs-list li {
+		padding: 0.4rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	.cs-list li:last-child {
+		border-bottom: none;
+	}
+	.cs-list a {
+		color: #000;
+		text-decoration: none;
+	}
+	.cs-list a:hover {
+		text-decoration: underline;
+	}
+	.cs-list-date {
+		font-size: 0.85rem;
+		color: #999;
+	}
+	.cs-flat-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.cs-flat-list li {
+		padding: 0.4rem 0;
+		border-bottom: 1px dashed #eee;
+	}
+	.cs-flat-list a {
+		color: #000;
+		text-decoration: none;
+	}
+	.cs-flat-list a:hover {
+		text-decoration: underline;
+	}
+	.cs-flat-date {
+		font-size: 0.85rem;
+		color: #999;
+	}
+	.empty-hint {
+		color: #999;
+		text-align: center;
+		padding: 2rem 0;
+	}
+	
+	@media (max-width: 720px) {
+		.cs-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

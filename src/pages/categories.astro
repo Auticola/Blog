@@ -1,16 +1,17 @@
 ---
+import { getCollection } from 'astro:content';
 import '../styles/global.css';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 
-const posts = import.meta.glob('./posts/*.md', { eager: true });
-const allPosts = Object.values(posts).map((p: any) => ({
-  ...p,
-  ...p.frontmatter,
+const posts = await getCollection('posts');
+const allPosts = posts.map((post) => ({
+  ...post.data,
+  url: `/posts/${post.id}/`,
 }));
 
 // 预设分类
-const categories = ['课业', 'CS'];
+const categories = ['课业', 'Computer Science', '项目', '生活'];
 
 // 按分类分组
 const grouped: Record<string, any[]> = {};
@@ -37,17 +38,19 @@ const selectedCat = url.searchParams.get('cat');
 		<Header />
 
 		<main class="page-content">
-			<h1>📂 分类</h1>
+			<h1>分类</h1>
 			<p class="cat-desc">点击分类查看相关文章。</p>
 
-			<!-- 分类导航标签 -->
-			<div class="cat-tabs">
-				<a href="/categories/" class={`cat-tab ${!selectedCat ? 'active' : ''}`}>全部</a>
+			<!-- 分类按钮网格 -->
+			<div class="cat-grid">
 				{categories.map((cat) => {
 					const count = grouped[cat]?.length || 0;
 					return (
-						<a href={`/categories/?cat=${cat}`} class={`cat-tab ${selectedCat === cat ? 'active' : ''}`}>
-							{cat} <span class="cat-count">{count}</span>
+						<a href={`/categories/?cat=${cat}`} class={`cat-card ${selectedCat === cat ? 'active' : ''}`}>
+							<div class="cat-card-content">
+								<div class="cat-name">{cat}</div>
+								<div class="cat-count">{count} 篇文章</div>
+							</div>
 						</a>
 					);
 				})}
@@ -100,35 +103,49 @@ const selectedCat = url.searchParams.get('cat');
 	}
 	.cat-desc {
 		color: #666;
-		margin-bottom: 1.5rem;
-	}
-	.cat-tabs {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
 		margin-bottom: 2rem;
 	}
-	.cat-tab {
-		display: inline-block;
-		padding: 0.3rem 0.8rem;
-		border-radius: 999px;
+	.cat-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1.5rem;
+		margin-bottom: 3rem;
+	}
+	.cat-card {
+		display: block;
+		background: #fff;
+		border-radius: 12px;
+		padding: 1.5rem;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 		text-decoration: none;
-		background: #e0e7ff;
-		color: #3730a3;
-		font-size: 0.85rem;
 		transition: all 0.2s;
 	}
-	.cat-tab:hover {
-		background: #c7d2fe;
+	.cat-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 	}
-	.cat-tab.active {
+	.cat-card.active {
 		background: #4f46e5;
 		color: #fff;
 	}
+	.cat-card-content {
+		text-align: center;
+	}
+	.cat-name {
+		font-size: 1.2rem;
+		font-weight: 600;
+		color: #333;
+		margin-bottom: 0.5rem;
+	}
+	.cat-card.active .cat-name {
+		color: #fff;
+	}
 	.cat-count {
-		font-size: 0.75rem;
-		margin-left: 0.25rem;
-		opacity: 0.8;
+		font-size: 0.85rem;
+		color: #999;
+	}
+	.cat-card.active .cat-count {
+		color: rgba(255,255,255,0.8);
 	}
 	.cat-section {
 		margin-bottom: 2rem;
@@ -171,5 +188,11 @@ const selectedCat = url.searchParams.get('cat');
 		color: #999;
 		text-align: center;
 		padding: 2rem 0;
+	}
+	
+	@media (max-width: 720px) {
+		.cat-grid {
+			grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		}
 	}
 </style>
