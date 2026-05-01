@@ -181,3 +181,10 @@ nav.site-nav a:focus-visible {
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
+
+.post-content img {
+  max-width: 100%; /* 图片最大不会超过父元素的宽度 */
+  height: auto;    /* 保持原有比例 */
+  display: block;  /* 避免底部出现神秘留白 */
+  margin: 0 auto;  /* 居中显示 */
+}
